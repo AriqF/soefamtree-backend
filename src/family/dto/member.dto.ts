@@ -72,7 +72,7 @@ export class AddFamilyMemberDto {
   birth_date: string;
 
   @ApiPropertyOptional({
-    example: '2024-01-01',
+    default: null,
     description: 'Date in YYYY-MM-DD format',
   })
   @IsOptional()

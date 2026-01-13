@@ -380,14 +380,10 @@ export class FamilyService {
 
         // Split fullname into first and last name (adjust this logic as needed)
         const nameParts = member.fullname.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName =
-          nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
 
         const memberData: any = {
           id: member.id.toString(),
-          firstName: firstName,
-          lastName: lastName,
+          fullname: member.fullname,
           gender: member.gender,
           birthDate: member.birth_date,
           photoUrl: member.photo_url,

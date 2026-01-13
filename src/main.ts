@@ -30,7 +30,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter(config));
   app.useGlobalFilters(new EntityNotFoundFilter());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   if (+config.get<string>('ENABLE_API_DOCS', '1') == 1) {
     app.use(
@@ -70,6 +70,17 @@ async function bootstrap() {
       .build();
 
     const document = SwaggerModule.createDocument(app, docConfig);
+
+    SwaggerModule.setup('docs', app, document, {
+      customSiteTitle: 'SoeFamTree API Docs',
+      swaggerOptions: {
+        tagsSorter: 'alpha',
+        docExpansion: 'none',
+        // operationsSorter: 'alpha',
+        // persistAuthorization: true,
+        persistAuthorization: true,
+      },
+    });
 
     await app.listen(process.env.PORT ?? 8000);
   }

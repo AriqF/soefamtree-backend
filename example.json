@@ -1,0 +1,215 @@
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "members": [
+      {
+        "id": 16,
+        "fullname": "Soeharsono",
+        "nickname": "Hary",
+        "gender": "male",
+        "birth_date": "1990-05-15",
+        "death_date": null,
+        "photo_url": "https://example.com/photo.jpg",
+        "bio": "A brief biography of the family member",
+        "spouse": {
+          "id": 17,
+          "fullname": "Sri Hartini",
+          "nickname": "Sri",
+          "gender": "female",
+          "birth_date": "1990-05-15",
+          "death_date": null,
+          "photo_url": "https://example.com/photo.jpg",
+          "bio": "A brief biography of the family member",
+          "spouse_id": 16,
+          "father_id": null,
+          "mother_id": null
+        },
+        "father_id": null,
+        "mother_id": null,
+        "childrens": [
+          {
+            "id": 20,
+            "fullname": "Luhur",
+            "nickname": "Eko",
+            "gender": "male",
+            "birth_date": "1990-05-15",
+            "death_date": null,
+            "photo_url": "https://example.com/photo.jpg",
+            "bio": "A brief biography of the family member",
+            "spouse": {
+              "id": 25,
+              "fullname": "Esti",
+              "nickname": "Esti",
+              "gender": "female",
+              "birth_date": "1990-05-15",
+              "death_date": null,
+              "photo_url": "https://example.com/photo.jpg",
+              "bio": "A brief biography of the family member",
+              "spouse_id": 20,
+              "father_id": null,
+              "mother_id": null,
+              "children_ids": null
+            },
+            "father_id": 16,
+            "mother_id": 17,
+            "children_ids": null
+          },
+          {
+            "id": 21,
+            "fullname": "Indah",
+            "nickname": "Indah",
+            "gender": "female",
+            "birth_date": "1990-05-15",
+            "death_date": null,
+            "photo_url": "https://example.com/photo.jpg",
+            "bio": "A brief biography of the family member",
+            "spouse": {
+              "id": 27,
+              "fullname": "Windu",
+              "nickname": "Windu",
+              "gender": "female",
+              "birth_date": "1990-05-15",
+              "death_date": null,
+              "photo_url": "https://example.com/photo.jpg",
+              "bio": "A brief biography of the family member",
+              "spouse_id": 21,
+              "father_id": null,
+              "mother_id": null,
+              "children_ids": null
+            },
+            "father_id": 16,
+            "mother_id": 17,
+            "children_ids": null
+          },
+          {
+            "id": 22,
+            "fullname": "Rahaju",
+            "nickname": "Uti",
+            "gender": "female",
+            "birth_date": "1990-05-15",
+            "death_date": null,
+            "photo_url": "https://example.com/photo.jpg",
+            "bio": "A brief biography of the family member",
+            "spouse": {
+              "id": 28,
+              "fullname": "Tri",
+              "nickname": "Tri",
+              "gender": "male",
+              "birth_date": "1990-05-15",
+              "death_date": null,
+              "photo_url": "https://example.com/photo.jpg",
+              "bio": "A brief biography of the family member",
+              "spouse_id": 22,
+              "father_id": null,
+              "mother_id": null,
+              "children_ids": null
+            },
+            "father_id": 16,
+            "mother_id": 17,
+            "children_ids": null
+          },
+          {
+            "id": 23,
+            "fullname": "Jun",
+            "nickname": "Yuyun",
+            "gender": "female",
+            "birth_date": "1990-05-15",
+            "death_date": null,
+            "photo_url": "https://example.com/photo.jpg",
+            "bio": "A brief biography of the family member",
+            "spouse": {
+              "id": 29,
+              "fullname": "Karim",
+              "nickname": "Karim",
+              "gender": "male",
+              "birth_date": "1990-05-15",
+              "death_date": null,
+              "photo_url": "https://example.com/photo.jpg",
+              "bio": "A brief biography of the family member",
+              "spouse_id": 23,
+              "father_id": null,
+              "mother_id": null
+            },
+            "father_id": 16,
+            "mother_id": 17,
+            "childrens": [
+              {
+                "id": 31,
+                "fullname": "Ariq",
+                "nickname": "Ariq",
+                "gender": "male",
+                "birth_date": "2001-11-26",
+                "death_date": null,
+                "photo_url": "https://example.com/photo.jpg",
+                "bio": "A brief biography of the family member",
+                "spouse": {
+                  "id": 32,
+                  "fullname": "Lulu",
+                  "nickname": "Lulu",
+                  "gender": "female",
+                  "birth_date": "2001-05-18",
+                  "death_date": null,
+                  "photo_url": "https://example.com/photo.jpg",
+                  "bio": "A brief biography of the family member",
+                  "spouse_id": 31,
+                  "father_id": null,
+                  "mother_id": null
+                },
+                "father_id": 29,
+                "mother_id": 23,
+                "childrens": [
+                  {
+                    "id": 33,
+                    "fullname": "Yuna",
+                    "nickname": "Yuna",
+                    "gender": "female",
+                    "birth_date": "2030-01-20",
+                    "death_date": null,
+                    "photo_url": "https://example.com/photo.jpg",
+                    "bio": "A brief biography of the family member",
+                    "spouse_id": null,
+                    "father_id": 31,
+                    "mother_id": 32,
+                    "children_ids": null
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": 24,
+            "fullname": "Agus",
+            "nickname": "Agus",
+            "gender": "female",
+            "birth_date": "1990-05-15",
+            "death_date": null,
+            "photo_url": "https://example.com/photo.jpg",
+            "bio": "A brief biography of the family member",
+            "spouse": {
+              "id": 30,
+              "fullname": "Yuli",
+              "nickname": "Yuli",
+              "gender": "female",
+              "birth_date": "1990-05-15",
+              "death_date": null,
+              "photo_url": "https://example.com/photo.jpg",
+              "bio": "A brief biography of the family member",
+              "spouse_id": 24,
+              "father_id": null,
+              "mother_id": null,
+              "children_ids": null
+            },
+            "father_id": 16,
+            "mother_id": 17,
+            "children_ids": null
+          }
+        ]
+      }
+    ],
+    "total_members": 15,
+    "total_generations": 4
+  },
+  "timestamp": "2025-12-17T22:38:55+07:00",
+  "version": "0.0.1"
+}

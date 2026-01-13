@@ -6,6 +6,7 @@ import { Member } from 'src/models/member.entity';
 import { MemberClosure } from 'src/models/member-closure.entity';
 import { MemberDetail } from 'src/models/member-detail.entity';
 import { MemberParent } from 'src/models/member-parent.entity';
+import { FamilyAdminController } from './controllers/family.admin.controller';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { MemberParent } from 'src/models/member-parent.entity';
       MemberParent,
     ]),
   ],
-  controllers: [FamilyController],
+  controllers: [FamilyController, FamilyAdminController],
   providers: [FamilyService],
 })
 export class FamilyModule {}

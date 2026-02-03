@@ -120,6 +120,84 @@ export class AddFamilyMemberDto {
   detail?: MemberDetailDto;
 }
 
+export class AddBulkFamilyMemberDto {
+  @ApiProperty({required: true, isArray: true})
+  @ValidateNested({each: true})
+  data: AddFamilyMemberDto[]
+}
+
+export class UpdateFamilyMemberDto {
+  @ApiPropertyOptional({ example: 'John Doe' })
+  @IsOptional()
+  @IsString()
+  fullname?: string;
+
+  @ApiPropertyOptional({ example: 'John' })
+  @IsOptional()
+  @IsString()
+  nickname?: string;
+
+  @ApiPropertyOptional({ enum: Gender, example: Gender.MALE })
+  @IsOptional()
+  @IsEnum(Gender)
+  gender?: Gender;
+
+  @ApiPropertyOptional({
+    example: '1990-05-15',
+    description: 'Date in YYYY-MM-DD format',
+  })
+  @IsOptional()
+  @IsDateString()
+  birth_date?: string;
+
+  @ApiPropertyOptional({
+    default: null,
+    description: 'Date in YYYY-MM-DD format',
+  })
+  @IsOptional()
+  @IsDateString()
+  death_date?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/photo.jpg' })
+  @IsOptional()
+  @IsString()
+  photo_url?: string;
+
+  @ApiPropertyOptional({ example: 'A brief biography of the family member' })
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'ID of the spouse (must be an existing member). Set to null to remove spouse.',
+  })
+  @IsOptional()
+  @IsInt()
+  spouse_id?: number | null;
+
+  @ApiPropertyOptional({
+    example: 10,
+    description: 'ID of the father (must be an existing male member). Set to null to remove father.',
+  })
+  @IsOptional()
+  @IsInt()
+  father_id?: number | null;
+
+  @ApiPropertyOptional({
+    example: 11,
+    description: 'ID of the mother (must be an existing female member). Set to null to remove mother.',
+  })
+  @IsOptional()
+  @IsInt()
+  mother_id?: number | null;
+
+  @ApiPropertyOptional({ type: MemberDetailDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => MemberDetailDto)
+  detail?: MemberDetailDto;
+}
 // Response DTOs for Family Tree View
 
 export class FamilyTreeMemberDto {

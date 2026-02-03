@@ -8,6 +8,7 @@ import {
   ManyToOne,
   JoinColumn,
   Index,
+  OneToOne,
 } from 'typeorm';
 import { Member } from './member.entity';
 
@@ -54,7 +55,7 @@ export class MemberDetail {
   @DeleteDateColumn()
   deleted_at: Date | null;
 
-  @ManyToOne(() => Member)
+  @OneToOne(() => Member,  (member) => member.id)
   @JoinColumn({ name: 'member_id' })
   member: Member;
 }

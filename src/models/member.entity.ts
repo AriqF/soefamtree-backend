@@ -9,9 +9,11 @@ import {
   OneToMany,
   JoinColumn,
   Index,
+  OneToOne,
 } from 'typeorm';
 import { MemberClosure } from './member-closure.entity';
 import { MemberParent } from './member-parent.entity';
+import { MemberDetail } from './member-detail.entity';
 
 export const MEMBER_TABLE = 'members';
 
@@ -64,6 +66,9 @@ export class Member {
 
   @DeleteDateColumn()
   deleted_at: Date | null;
+
+  @OneToOne(() => MemberDetail, (detail) => detail.member)
+  detail: MemberDetail;
 
   // Relations
   @OneToMany(() => MemberParent, (memberParent) => memberParent.child)

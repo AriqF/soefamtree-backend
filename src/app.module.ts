@@ -8,6 +8,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmDBModuleOptions } from './config/data-source';
+import { AccountModule } from './account/account.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { typeOrmDBModuleOptions } from './config/data-source';
       ],
     }),
     FamilyModule,
+    AccountModule,
   ],
   controllers: [AppController],
   providers: [

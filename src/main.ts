@@ -48,24 +48,16 @@ async function bootstrap() {
         {
           scheme: 'Bearer',
           type: 'http',
-          name: 'admin-access-token',
+          name: 'account-access-token',
         },
-        'admin-access-token',
-      )
-      .addBearerAuth(
-        {
-          scheme: 'Bearer',
-          type: 'http',
-          name: 'user-access-token',
-        },
-        'user-access-token',
+        'account-access-token',
       )
       .addApiKey({ type: 'apiKey', name: 'x-apikey', in: 'header' }, 'x-apikey')
       .addSecurityRequirements('x-apikey')
       .setTitle('SoeFamTree API Docs')
       .setDescription('SoeFamTree Project API Documentation')
       .setVersion('1.0')
-      .addTag('API PUBLIC', 'endpoint for public')
+      // .addTag('API PUBLIC', 'endpoint for public')
       .setExternalDoc('Download JSON spec for postman', '/docs-json')
       .build();
 

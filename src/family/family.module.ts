@@ -19,5 +19,6 @@ import { FamilyAdminController } from './controllers/family.admin.controller';
   ],
   controllers: [FamilyController, FamilyAdminController],
   providers: [FamilyService],
+  exports: [FamilyService]
 })
 export class FamilyModule {}

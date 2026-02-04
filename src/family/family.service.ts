@@ -538,7 +538,7 @@ export class FamilyService {
   async viewFamilyTree(ancestorId: number) {
     try {
       // Get all descendants of the ancestor from closure table
-      const closureRecords: {mc_descendant_id: number, mc_depth: number}[] = await this.memberClosureRepo
+      const closureRecords: { mc_descendant_id: number, mc_depth: number }[] = await this.memberClosureRepo
         .createQueryBuilder('mc')
         .select(['mc.descendant_id', 'mc.depth'])
         .where('mc.ancestor_id = :a', { a: ancestorId })
@@ -640,17 +640,26 @@ export class FamilyService {
     }
   }
 
-  async getOneMemberDetail(memberId: number){
+  async findOneMemberById(memberId: number) {
+    try {
+      return await this.memberRepo.findOne({ where: { id: memberId } })
+    } catch (error) {
+      this.logger.error('FIND_ONE_MEMBER_ERR ' + error);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getOneMemberDetail(memberId: number) {
     try {
       const member = await this.memberRepo.createQueryBuilder('m')
-      .leftJoin('m.detail', 'dtl')
-      .select(['m.id', 'm.fullname', 'm.nickname', 'm.gender', 'm.birth_date',
-        'm.death_date', 'm.photo_url', 'm.bio', 'dtl.profession', 'dtl.domicile',
-        'dtl.full_address', 'dtl.whatsapp_number',
-      ])
-      .where('m.id = :mid', {mid: memberId})
-      .getOne();
-      if(!member) throw new NotFoundException('NOT_FOUND');
+        .leftJoin('m.detail', 'dtl')
+        .select(['m.id', 'm.fullname', 'm.nickname', 'm.gender', 'm.birth_date',
+          'm.death_date', 'm.photo_url', 'm.bio', 'dtl.profession', 'dtl.domicile',
+          'dtl.full_address', 'dtl.whatsapp_number',
+        ])
+        .where('m.id = :mid', { mid: memberId })
+        .getOne();
+      if (!member) throw new NotFoundException('NOT_FOUND');
       return member;
     } catch (error) {
       this.logger.error('GET_MEMBER_DETAIL_ERR ' + error);

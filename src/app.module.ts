@@ -9,6 +9,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmDBModuleOptions } from './config/data-source';
 import { AccountModule } from './account/account.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AccountModule } from './account/account.module';
     }),
     FamilyModule,
     AccountModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

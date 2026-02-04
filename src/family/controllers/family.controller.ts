@@ -4,7 +4,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetOneByIdDto } from 'src/common/dto/global-request.dto';
 import { FamilyTreeResponseDto } from '../dto/member.dto';
 
-@ApiTags('API User - Family Module')
+@ApiTags('API Public - Family Module')
 @Controller('family')
 export class FamilyController {
   constructor(private readonly familyService: FamilyService) {}

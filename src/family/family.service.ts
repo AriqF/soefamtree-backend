@@ -640,15 +640,6 @@ export class FamilyService {
     }
   }
 
-  async findOneMemberById(memberId: number) {
-    try {
-      return await this.memberRepo.findOne({ where: { id: memberId } })
-    } catch (error) {
-      this.logger.error('FIND_ONE_MEMBER_ERR ' + error);
-      throw new InternalServerErrorException(error);
-    }
-  }
-
   async getOneMemberDetail(memberId: number) {
     try {
       const member = await this.memberRepo.createQueryBuilder('m')

@@ -24,6 +24,7 @@ export const dataSourceOptions: DataSourceOptions = {
   cache: {
     duration: Number(configService.get('DB_CACHE_DURATION', 1000)),
   },
+
 };
 
 export const typeOrmDBModuleOptions: TypeOrmModuleOptions = {

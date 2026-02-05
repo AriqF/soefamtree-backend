@@ -640,6 +640,10 @@ export class FamilyService {
     }
   }
 
+  async findOneMemberById(memberId: number) {
+    return await this.memberRepo.findOne({ where: { id: memberId } })
+  }
+
   async getOneMemberDetail(memberId: number) {
     try {
       const member = await this.memberRepo.createQueryBuilder('m')

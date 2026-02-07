@@ -591,9 +591,26 @@ export class FamilyService {
         const parentIds =
           member.parents?.map((p) => p.parent_id.toString()) ?? [];
 
-        // Get children IDs
-        const childrenIds =
-          member.children?.map((c) => c.child_id.toString()) ?? [];
+        // Get children IDs sorted by birth date (oldest to youngest)
+        const childrenIds = member.children
+          ? member.children
+              .map((c) => {
+                const childMember = allMembers.find((m) => m.id === c.child_id);
+                return {
+                  id: c.child_id,
+                  birthDate: childMember?.birth_date || null,
+                };
+              })
+              .sort((a, b) => {
+                // Handle null birth dates - put them at the end
+                if (!a.birthDate && !b.birthDate) return 0;
+                if (!a.birthDate) return 1;
+                if (!b.birthDate) return -1;
+                // Sort by birth date (oldest first)
+                return new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime();
+              })
+              .map((c) => c.id.toString())
+          : [];
 
         const memberData: FamilyResponse = {
           id: member.id.toString(),

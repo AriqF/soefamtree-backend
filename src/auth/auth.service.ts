@@ -77,6 +77,8 @@ export class AuthService {
             if (!acc) return 'OK'; //not letting requestor account found or not
             const otp = this.generateOtpCode();
 
+            //TODO: later improvement: add rate limit for OTP
+
             await this.logOTPRepo.insert({
                 email: payload.email,
                 otp,

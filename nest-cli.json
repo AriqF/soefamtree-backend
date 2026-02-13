@@ -3,6 +3,9 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "assets": ["**/*.hbs", "**/*.css", "**/*.html", "**/*.ttf", "**/*.wasm", "**/*.zkey"],
+    "watchAssets": true,
+    "plugins": ["@nestjs/swagger"]
   }
 }

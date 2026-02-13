@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmDBModuleOptions } from './config/data-source';
 import { AccountModule } from './account/account.module';
 import { AuthModule } from './auth/auth.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AuthModule } from './auth/auth.module';
     FamilyModule,
     AccountModule,
     AuthModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 import { FamilyService } from '../family.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AddBulkFamilyMemberDto, AddFamilyMemberDto, FamilyTreeResponseDto, UpdateFamilyMemberDto } from '../dto/member.dto';
+import { AddBulkFamilyMemberDto, AddFamilyDto, AddFamilyMemberDto, FamilyTreeResponseDto, UpdateFamilyMemberDto } from '../dto/member.dto';
 import { GetOneByIdDto } from 'src/common/dto/global-request.dto';
 
 @ApiTags('API Admin - Family Module')
@@ -10,6 +10,21 @@ export class FamilyAdminController {
   constructor(private readonly familyService: FamilyService) {}
 
   @Post()
+  @ApiOperation({
+    summary: 'Add a new family',
+    description:
+      'Creates a new family member with optional parent and spouse relationships',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Family member successfully created',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  async addFamily(@Body() body: AddFamilyDto) {
+    return await this.familyService.addFamily(body);
+  }
+
+  @Post('member')
   @ApiOperation({
     summary: 'Add a new family member',
     description:

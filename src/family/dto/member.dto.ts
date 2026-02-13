@@ -79,18 +79,18 @@ export class AddFamilyMemberDto {
   @IsDateString()
   death_date?: string;
 
-  @ApiPropertyOptional({ example: 'https://example.com/photo.jpg' })
+  @ApiPropertyOptional({ default: null })
   @IsOptional()
   @IsString()
   photo_url?: string;
 
-  @ApiPropertyOptional({ example: 'A brief biography of the family member' })
+  @ApiPropertyOptional({ default: null })
   @IsOptional()
   @IsString()
   bio?: string;
 
   @ApiPropertyOptional({
-    example: 1,
+    default: null,
     description: 'ID of the spouse (must be an existing member)',
   })
   @IsOptional()
@@ -98,7 +98,7 @@ export class AddFamilyMemberDto {
   spouse_id?: number;
 
   @ApiPropertyOptional({
-    example: 10,
+    default: null,
     description: 'ID of the father (must be an existing male member)',
   })
   @IsOptional()
@@ -106,7 +106,7 @@ export class AddFamilyMemberDto {
   father_id?: number;
 
   @ApiPropertyOptional({
-    example: 11,
+    default: null,
     description: 'ID of the mother (must be an existing female member)',
   })
   @IsOptional()
@@ -121,9 +121,30 @@ export class AddFamilyMemberDto {
 }
 
 export class AddBulkFamilyMemberDto {
-  @ApiProperty({required: true, isArray: true})
-  @ValidateNested({each: true})
+  @ApiProperty({ required: true, isArray: true })
+  @ValidateNested({ each: true })
   data: AddFamilyMemberDto[]
+}
+
+export class AddFamilyDto {
+  @ApiProperty({ required: true, type: () => AddFamilyMemberDto })
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => AddFamilyMemberDto)
+  father: AddFamilyMemberDto;
+
+  @ApiProperty({ required: true, type: () => AddFamilyMemberDto })
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => AddFamilyMemberDto)
+  mother: AddFamilyMemberDto;
+
+  @ApiProperty({ required: true, isArray: true, type: () => AddFamilyMemberDto })
+  @IsNotEmpty()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AddFamilyMemberDto)
+  children: AddFamilyMemberDto[];
 }
 
 export class UpdateFamilyMemberDto {

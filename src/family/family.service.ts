@@ -7,8 +7,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, MoreThan, Repository } from 'typeorm';
-import { AddBulkFamilyMemberDto, AddFamilyMemberDto, FamilyTreeResponseDto, UpdateFamilyMemberDto } from './dto/member.dto';
+import { DataSource, In, MoreThan, QueryRunner, Repository } from 'typeorm';
+import { AddBulkFamilyMemberDto, AddFamilyDto, AddFamilyMemberDto, FamilyTreeResponseDto, UpdateFamilyMemberDto } from './dto/member.dto';
 import { Member } from 'src/models/member.entity';
 import { MemberParent, ParentRelation } from 'src/models/member-parent.entity';
 import { MemberDetail } from 'src/models/member-detail.entity';
@@ -35,13 +35,16 @@ export class FamilyService {
    * - photo url pakai apa?
    * - migrasi dan testing
    */
-  async addMember(body: AddFamilyMemberDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    try {
+  async addMember(body: AddFamilyMemberDto, queryRunner?: QueryRunner): Promise<Member> {
+    let internalTrx = false;
+    if(!queryRunner){
+      queryRunner = this.dataSource.createQueryRunner();
       await queryRunner.connect();
       await queryRunner.startTransaction();
+      internalTrx = true;
+    }
 
+    try {
       let spouse: Member | null = null;
       if (body.spouse_id) {
         spouse = await queryRunner.manager.findOne(Member, {
@@ -159,16 +162,22 @@ export class FamilyService {
       if (closureToInsert.length > 0)
         await queryRunner.manager.insert(MemberClosure, closureToInsert);
 
-      await queryRunner.commitTransaction();
+      if (internalTrx) {
+        await queryRunner.commitTransaction();
+      }
 
-      return 'OK';
+      return member;
     } catch (error) {
-      await queryRunner.rollbackTransaction();
-      this.logger.error('ADD_FAMILY_ERR ' + error.message);
+      if (internalTrx) {
+        await queryRunner.rollbackTransaction();
+      }
+      this.logger.error('ADD_MEMBER_ERR ' + error.message);
       if (error instanceof HttpException) throw error;
       else throw new InternalServerErrorException(error);
     } finally {
-      await queryRunner.release();
+      if (internalTrx) {
+        await queryRunner.release();
+      }
     }
   }
 
@@ -185,6 +194,63 @@ export class FamilyService {
     } catch (error) {
       this.logger.error(error);
       throw new InternalServerErrorException(error)
+    }
+  }
+
+  /**
+   * Add a complete family with father, mother, and children
+   * - Creates father and mother as spouses
+   * - Creates all children with parent relationships
+   * - Properly sets up closure table for ancestry tracking
+   */
+  async addFamily(body: AddFamilyDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    try {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      // Create father
+      const father = await this.addMember(body.father, queryRunner);
+
+      // Create mother and link as spouse to father
+      const mother = await this.addMember(
+        { ...body.mother, spouse_id: father.id },
+        queryRunner,
+      );
+
+      // Update father's spouse_id to link back to mother
+      await queryRunner.manager.update(
+        Member,
+        { id: father.id },
+        { spouse_id: mother.id },
+      );
+
+      // Create children with parent relationships
+      const createdChildren: Member[] = [];
+      for (const childData of body.children) {
+        const child = await this.addMember(
+          { ...childData, father_id: father.id, mother_id: mother.id },
+          queryRunner,
+        );
+        createdChildren.push(child);
+      }
+
+      await queryRunner.commitTransaction();
+
+      return {
+        message: 'Family added successfully',
+        father_id: father.id,
+        mother_id: mother.id,
+        children_ids: createdChildren.map((c) => c.id),
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error('ADD_FAMILY_ERR ' + error.message);
+      if (error instanceof HttpException) throw error;
+      else throw new InternalServerErrorException(error);
+    } finally {
+      await queryRunner.release();
     }
   }
 

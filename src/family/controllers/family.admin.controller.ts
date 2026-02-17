@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { FamilyService } from '../family.service';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AddBulkFamilyMemberDto, AddFamilyDto, AddFamilyMemberDto, FamilyTreeResponseDto, UpdateFamilyMemberDto } from '../dto/member.dto';
-import { GetOneByIdDto } from 'src/common/dto/global-request.dto';
+import { GetOneByIdDto, PageOptionsDto, QueryOptionDto } from 'src/common/dto/global-request.dto';
 
 @ApiTags('API Admin - Family Module')
 @Controller('admin/family')
@@ -54,6 +54,16 @@ export class FamilyAdminController {
     return await this.familyService.addBulkMembers(body);
   }
 
+  @Get('all')
+  async getAllMembers(@Query() query: PageOptionsDto){
+    return await this.familyService.getAllMembers(query)
+  }
+
+  @Get('selector')
+  async getAllMemberSelector(@Query() query: QueryOptionDto){
+    return await this.familyService.getAllMembersSelector(query.q)
+  }
+
   @Get('tree/:id')
   @ApiOperation({
     summary: 'Get complete family tree',
@@ -67,6 +77,11 @@ export class FamilyAdminController {
   })
   async getFamilyTree(@Param() param: GetOneByIdDto) {
     return await this.familyService.viewFamilyTree(param.id);
+  }
+
+  @Get(':id')
+  async getMemberDetail(@Param() param: GetOneByIdDto){
+    return await this.familyService.getMemberDetailAdmin(+param.id)
   }
 
   @Patch(':id')

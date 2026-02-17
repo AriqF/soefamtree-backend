@@ -5,7 +5,7 @@ import { AuthDto, AuthOTPDto, AuthRequestOTPDto } from './dto/auth.dto';
 import { compare } from 'bcrypt';
 import { LessThan, MoreThan, Repository } from 'typeorm';
 import { Account } from 'src/models/account.entity';
-import { JWTAccount } from './common/auth.interface';
+import { JWTAccount, SuccessAuthResponse } from './common/auth.interface';
 import { JwtService } from '@nestjs/jwt';
 import moment from 'moment-timezone';
 import { MailService } from 'src/mail/mail.service';
@@ -37,7 +37,7 @@ export class AuthService {
         return token;
     }
 
-    async signIn(payload: AuthDto) {
+    async signIn(payload: AuthDto): Promise<SuccessAuthResponse> {
         const { email, password } = payload;
         try {
             const account = await this.accountRepo.findOne({
@@ -59,7 +59,9 @@ export class AuthService {
 
                 return {
                     token,
-                    exp
+                    exp,
+                    admin_auth_index: account.admin_auth_index,
+                    is_admin: account.is_admin
                 }
             } else {
                 throw new UnauthorizedException('INVALID_LOGIN_CREDENTIAL')
@@ -148,7 +150,9 @@ export class AuthService {
 
             return {
                 token,
-                exp
+                exp,
+                admin_auth_index: account.admin_auth_index,
+                is_admin: account.is_admin
             }
         } catch (error) {
             this.logger.error('VERIFY_OTP_ERR ' + error.message);

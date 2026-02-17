@@ -7,13 +7,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, MoreThan, Repository } from 'typeorm';
-import { AddBulkFamilyMemberDto, AddFamilyMemberDto, FamilyTreeResponseDto, UpdateFamilyMemberDto } from './dto/member.dto';
+import { DataSource, In, MoreThan, QueryRunner, Repository } from 'typeorm';
+import {
+  AddBulkFamilyMemberDto,
+  AddFamilyDto,
+  AddFamilyMemberDto,
+  FamilyTreeResponseDto,
+  UpdateFamilyMemberDto,
+} from './dto/member.dto';
 import { Member } from 'src/models/member.entity';
 import { MemberParent, ParentRelation } from 'src/models/member-parent.entity';
 import { MemberDetail } from 'src/models/member-detail.entity';
 import { MemberClosure } from 'src/models/member-closure.entity';
 import { FamilyResponse } from './family.interface';
+import { PageOptionsDto } from 'src/common/dto/global-request.dto';
+import { paginate } from 'src/common/util/pagination';
 
 @Injectable()
 export class FamilyService {
@@ -28,20 +36,26 @@ export class FamilyService {
     private readonly memberDetailRepo: Repository<MemberDetail>,
     @InjectRepository(MemberParent)
     private readonly memberParentRepo: Repository<MemberParent>,
-  ) { }
+  ) {}
 
   /**
    * TODO:
    * - photo url pakai apa?
    * - migrasi dan testing
    */
-  async addMember(body: AddFamilyMemberDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    try {
+  async addMember(
+    body: AddFamilyMemberDto,
+    queryRunner?: QueryRunner,
+  ): Promise<Member> {
+    let internalTrx = false;
+    if (!queryRunner) {
+      queryRunner = this.dataSource.createQueryRunner();
       await queryRunner.connect();
       await queryRunner.startTransaction();
+      internalTrx = true;
+    }
 
+    try {
       let spouse: Member | null = null;
       if (body.spouse_id) {
         spouse = await queryRunner.manager.findOne(Member, {
@@ -159,9 +173,88 @@ export class FamilyService {
       if (closureToInsert.length > 0)
         await queryRunner.manager.insert(MemberClosure, closureToInsert);
 
+      if (internalTrx) {
+        await queryRunner.commitTransaction();
+      }
+
+      return member;
+    } catch (error) {
+      if (internalTrx) {
+        await queryRunner.rollbackTransaction();
+      }
+      this.logger.error('ADD_MEMBER_ERR ' + error.message);
+      if (error instanceof HttpException) throw error;
+      else throw new InternalServerErrorException(error);
+    } finally {
+      if (internalTrx) {
+        await queryRunner.release();
+      }
+    }
+  }
+
+  async addBulkMembers(body: AddBulkFamilyMemberDto) {
+    try {
+      let membersAdded = 0;
+      for (const element of body.data) {
+        await this.addMember(element);
+        membersAdded++;
+      }
+      return {
+        added: membersAdded,
+      };
+    } catch (error) {
+      this.logger.error(error);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  /**
+   * Add a complete family with father, mother, and children
+   * - Creates father and mother as spouses
+   * - Creates all children with parent relationships
+   * - Properly sets up closure table for ancestry tracking
+   */
+  async addFamily(body: AddFamilyDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    try {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      // Create father
+      const father = await this.addMember(body.father, queryRunner);
+
+      // Create mother and link as spouse to father
+      const mother = await this.addMember(
+        { ...body.mother, spouse_id: father.id },
+        queryRunner,
+      );
+
+      // Update father's spouse_id to link back to mother
+      await queryRunner.manager.update(
+        Member,
+        { id: father.id },
+        { spouse_id: mother.id },
+      );
+
+      // Create children with parent relationships
+      const createdChildren: Member[] = [];
+      for (const childData of body.children) {
+        const child = await this.addMember(
+          { ...childData, father_id: father.id, mother_id: mother.id },
+          queryRunner,
+        );
+        createdChildren.push(child);
+      }
+
       await queryRunner.commitTransaction();
 
-      return 'OK';
+      return {
+        message: 'Family added successfully',
+        father_id: father.id,
+        mother_id: mother.id,
+        children_ids: createdChildren.map((c) => c.id),
+      };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.logger.error('ADD_FAMILY_ERR ' + error.message);
@@ -169,22 +262,6 @@ export class FamilyService {
       else throw new InternalServerErrorException(error);
     } finally {
       await queryRunner.release();
-    }
-  }
-
-  async addBulkMembers(body: AddBulkFamilyMemberDto) {
-    try {
-      let membersAdded = 0
-      for (const element of body.data) {
-        await this.addMember(element);
-        membersAdded++
-      }
-      return {
-        added: membersAdded
-      }
-    } catch (error) {
-      this.logger.error(error);
-      throw new InternalServerErrorException(error)
     }
   }
 
@@ -224,8 +301,10 @@ export class FamilyService {
 
       // 3. Update basic member information
       const memberUpdateData: Partial<Member> = {};
-      if (body.fullname !== undefined) memberUpdateData.fullname = body.fullname;
-      if (body.nickname !== undefined) memberUpdateData.nickname = body.nickname;
+      if (body.fullname !== undefined)
+        memberUpdateData.fullname = body.fullname;
+      if (body.nickname !== undefined)
+        memberUpdateData.nickname = body.nickname;
       if (body.gender !== undefined) memberUpdateData.gender = body.gender;
       if (body.birth_date !== undefined)
         memberUpdateData.birth_date = body.birth_date as any;
@@ -238,7 +317,11 @@ export class FamilyService {
         memberUpdateData.spouse_id = body.spouse_id;
 
       if (Object.keys(memberUpdateData).length > 0) {
-        await queryRunner.manager.update(Member, { id: memberId }, memberUpdateData);
+        await queryRunner.manager.update(
+          Member,
+          { id: memberId },
+          memberUpdateData,
+        );
       }
 
       // 4. Update member details
@@ -359,11 +442,9 @@ export class FamilyService {
     );
 
     const fatherChanged =
-      newFatherId !== undefined &&
-      newFatherId !== currentFather?.parent_id;
+      newFatherId !== undefined && newFatherId !== currentFather?.parent_id;
     const motherChanged =
-      newMotherId !== undefined &&
-      newMotherId !== currentMother?.parent_id;
+      newMotherId !== undefined && newMotherId !== currentMother?.parent_id;
 
     if (!fatherChanged && !motherChanged) {
       return; // No changes needed
@@ -433,7 +514,9 @@ export class FamilyService {
       where: { ancestor_id: memberId },
     });
 
-    const descendantIds = descendants.map((d: MemberClosure) => d.descendant_id);
+    const descendantIds = descendants.map(
+      (d: MemberClosure) => d.descendant_id,
+    );
 
     // Delete all closure records where descendant is in our subtree
     // EXCEPT the self-referencing records (depth = 0)
@@ -538,11 +621,12 @@ export class FamilyService {
   async viewFamilyTree(ancestorId: number) {
     try {
       // Get all descendants of the ancestor from closure table
-      const closureRecords: { mc_descendant_id: number, mc_depth: number }[] = await this.memberClosureRepo
-        .createQueryBuilder('mc')
-        .select(['mc.descendant_id', 'mc.depth'])
-        .where('mc.ancestor_id = :a', { a: ancestorId })
-        .getRawMany();
+      const closureRecords: { mc_descendant_id: number; mc_depth: number }[] =
+        await this.memberClosureRepo
+          .createQueryBuilder('mc')
+          .select(['mc.descendant_id', 'mc.depth'])
+          .where('mc.ancestor_id = :a', { a: ancestorId })
+          .getRawMany();
 
       if (closureRecords.length === 0) {
         return {
@@ -551,8 +635,10 @@ export class FamilyService {
         };
       }
 
-      console.log(closureRecords)
-      const descendantMaps = new Map<number, number>(closureRecords.map((c) => [c.mc_descendant_id, c.mc_depth]))
+      console.log(closureRecords);
+      const descendantMaps = new Map<number, number>(
+        closureRecords.map((c) => [c.mc_descendant_id, c.mc_depth]),
+      );
       const descendantIds = closureRecords.map((r) => r.mc_descendant_id);
 
       // Get all members with their relationships
@@ -607,7 +693,10 @@ export class FamilyService {
                 if (!a.birthDate) return 1;
                 if (!b.birthDate) return -1;
                 // Sort by birth date (oldest first)
-                return new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime();
+                return (
+                  new Date(a.birthDate).getTime() -
+                  new Date(b.birthDate).getTime()
+                );
               })
               .map((c) => c.id.toString())
           : [];
@@ -624,7 +713,7 @@ export class FamilyService {
           spouseId: null,
           deathDate: null,
           parentIds: [],
-          childrenIds: []
+          childrenIds: [],
         };
 
         // Add optional fields only if they exist
@@ -658,16 +747,27 @@ export class FamilyService {
   }
 
   async findOneMemberById(memberId: number) {
-    return await this.memberRepo.findOne({ where: { id: memberId } })
+    return await this.memberRepo.findOne({ where: { id: memberId } });
   }
 
   async getOneMemberDetail(memberId: number) {
     try {
-      const member = await this.memberRepo.createQueryBuilder('m')
+      const member = await this.memberRepo
+        .createQueryBuilder('m')
         .leftJoin('m.detail', 'dtl')
-        .select(['m.id', 'm.fullname', 'm.nickname', 'm.gender', 'm.birth_date',
-          'm.death_date', 'm.photo_url', 'm.bio', 'dtl.profession', 'dtl.domicile',
-          'dtl.full_address', 'dtl.whatsapp_number',
+        .select([
+          'm.id',
+          'm.fullname',
+          'm.nickname',
+          'm.gender',
+          'm.birth_date',
+          'm.death_date',
+          'm.photo_url',
+          'm.bio',
+          'dtl.profession',
+          'dtl.domicile',
+          'dtl.full_address',
+          'dtl.whatsapp_number',
         ])
         .where('m.id = :mid', { mid: memberId })
         .getOne();
@@ -675,6 +775,100 @@ export class FamilyService {
       return member;
     } catch (error) {
       this.logger.error('GET_MEMBER_DETAIL_ERR ' + error);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getAllMembers(queryPayload: PageOptionsDto) {
+    try {
+      const { page, limit, q } = queryPayload;
+      let query = this.memberRepo
+        .createQueryBuilder('m')
+        .leftJoin('m.detail', 'd')
+        .select([
+          'm.id',
+          'm.fullname',
+          'm.nickname',
+          'm.gender',
+          'm.photo_url',
+          'm.birth_date',
+          'd.domicile'
+        ]);
+
+      if (q) {
+        query.where(`m.nickname ILIKE :src OR m.fullname ILIKE :src`, {
+          src: `%${q}%`,
+        });
+      }
+
+      const [members, count] = await query
+        .orderBy('m.id', 'DESC')
+        .limit(limit)
+        .offset((page - 1) * limit)
+        .getManyAndCount();
+
+      return paginate<Member>(members, count, page, limit);
+    } catch (error) {
+      this.logger.error(`GET_ALL_MEMBERS_ERR ${error}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getAllMembersSelector(search: string) {
+    try {
+      let query = this.memberRepo
+        .createQueryBuilder('m')
+        .select(['m.id', 'm.fullname', 'm.nickname']);
+
+      if (search) {
+        query.where(`m.nickname ILIKE :src OR m.fullname ILIKE :src`, {
+          src: `%${search}%`,
+        });
+      }
+
+      return query.getMany();
+    } catch (error) {
+      this.logger.error(`GET_ALL_MEMBER_SELECTOR_ERR ${error}`);
+      throw new InternalServerErrorException(error);
+    }
+  }
+
+  async getMemberDetailAdmin(id: number) {
+    try {
+      return await this.memberRepo
+        .createQueryBuilder('m')
+        .leftJoin('m.detail', 'd')
+        .leftJoin('m.parents', 'p')
+        .leftJoin('m.spouse', 's')
+        .leftJoin('p.parent', 'pm')
+        .select([
+          'm.id',
+          'm.fullname',
+          'm.nickname',
+          'm.gender',
+          'm.birth_date',
+          'm.death_date',
+          'm.photo_url',
+          'm.bio',
+          'd.id',
+          'd.profession',
+          'd.domicile',
+          'd.full_address',
+          'd.whatsapp_number',
+          'd.instagram_handle',
+          's.id',
+          's.fullname',
+          's.nickname',
+          'p.parent',
+          'p.relation',
+          'pm.id',
+          'pm.fullname',
+          'pm.nickname',
+        ])
+        .where('m.id = :mid', { mid: id })
+        .getOne();
+    } catch (error) {
+      this.logger.error(`GET_DETAIL_MEMBER_ERR`);
       throw new InternalServerErrorException(error);
     }
   }

@@ -5,3 +5,10 @@ export interface JWTAccount {
     is_admin: boolean;
     admin_auth_index: number;
 }
+
+export interface SuccessAuthResponse {
+    token: string;
+    exp: number;
+    is_admin: boolean;
+    admin_auth_index: number;
+}
